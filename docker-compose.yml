@@ -1,0 +1,45 @@
+networks:
+  datetime-service-nfs:
+    name: datetime-service-nfs
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.19.0.0/24
+
+services:
+  flask:
+    build: .
+    env_file:
+      - .env
+    container_name: ${FLASK_CONTAINER_NAME}
+    hostname: ${FLASK_HOST}
+    volumes:
+      - shared-files:/app/files
+    ports:
+      - "${FLASK_PORT}:${FLASK_PORT}"
+    networks:
+      datetime-service-nfs:
+        ipv4_address: ${FLASK_IP}
+
+  nginx:
+    image: ${NGINX_IMAGE}
+    env_file:
+      - .env
+    container_name: ${NGINX_CONTAINER_NAME}
+    hostname: ${NGINX_HOST}
+    networks:
+      datetime-service-nfs:
+        ipv4_address: ${NGINX_IP}
+    volumes:
+      - ${NGINX_CONF_PATH}:/etc/nginx/conf.d/default.conf
+      - shared-files:/app/files
+    ports:
+      - "${NGINX_PORT}:${NGINX_PORT}"
+
+volumes:
+  shared-files:
+    driver: local
+    driver_opts:
+      type: "nfs"
+      o: "addr=${NFS_SERVER_IP},nolock,soft,rw"
+      device: ":${NFS_SHARE_PATH}"

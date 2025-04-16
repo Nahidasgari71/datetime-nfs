@@ -1,0 +1,15 @@
+stages:
+  - build
+  - deploy
+
+build:
+  stage: build
+  script:
+    - docker build -t myapp .
+
+deploy:
+  stage: deploy
+  script:
+    - docker compose down -v
+    - docker compose up -d
+
